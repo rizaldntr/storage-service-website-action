@@ -19,5 +19,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
-          tags: "latest,${{ github.ref }}"
+          tags: "latest"
           platforms: linux/amd64,linux/arm64
