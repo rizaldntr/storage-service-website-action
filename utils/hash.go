@@ -1,4 +1,4 @@
-package core
+package utils
 
 import (
 	"crypto/md5"
@@ -10,7 +10,6 @@ import (
 func HashMD5(filepath string) (string, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
-		// TODO: debug info
 		return "", err
 	}
 	defer f.Close()

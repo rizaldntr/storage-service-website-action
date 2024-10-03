@@ -1,0 +1,70 @@
+name: "storage-service-website-action"
+description: "Deploy your static website on Storage Service (S3)"
+author: "Rizal Diantoro <rizaldntr@gmail.com>"
+branding:
+  icon: "upload"
+  color: "gray-dark"
+inputs:
+  folder:
+    description: "Folder which contains the website files"
+    required: true
+  bucket:
+    description: "Bucket name"
+    required: true
+  aws-access-key-id:
+    description: "AWS Access Key ID"
+    required: true
+  aws-secret-access-key:
+    description: "AWS Secret Access Key"
+    required: true
+  aws-region:
+    description: "AWS Region"
+    required: true
+  object-rules:
+    description: "Yaml configuration for setting cache-control and content-type based on pattern"
+    required: false
+  exclude:
+    description: "Exclude files or folders"
+    required: false
+  default-cache-control:
+    description: "Default cache-control value"
+    required: false
+    default: max-age=2592000
+  html-cache-control:
+    description: "Cache-control value for HTML files"
+    required: false
+    default: max-age=600
+  image-cache-control:
+    description: "Cache-control value for image files"
+    required: false
+    default: max-age=864000
+  pdf-cache-control:
+    description: "Cache-control value for PDF files"
+    required: false
+    default: max-age=2592000
+  remove-html-extension:
+    description: "Remove .html extension from URL"
+    required: false
+    default: "false"
+  duplicate-html-with-no-extension:
+    description: "Duplicate HTML files with no extension"
+    required: false
+    default: "false"
+
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  env:
+    AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+    AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+    AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+    BUCKET: ${{ inputs.bucket }}
+    FOLDER: ${{ inputs.folder }}
+    OBJECT_RULES: ${{ inputs.object-rules }}
+    EXCLUDE: ${{ inputs.exclude }}
+    DEFAULT_CACHE_CONTROL: ${{ inputs.default-cache-control }}
+    HTML_CACHE_CONTROL: ${{ inputs.html-cache-control }}
+    IMAGE_CACHE_CONTROL: ${{ inputs.image-cache-control }}
+    PDF_CACHE_CONTROL: ${{ inputs.pdf-cache-control }}
+    REMOVE_HTML_EXTENSION: ${{ inputs.remove-html-extension }}
+    DUPLICATE_HTML_WITH_NO_EXTENSION: ${{ inputs.duplicate-html-with-no-extension }}
