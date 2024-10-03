@@ -1,4 +1,4 @@
-name: Publish to Docker Hub
+name: Publish to Github Container Registry
 on:
   push:
     branches:
@@ -8,6 +8,8 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
