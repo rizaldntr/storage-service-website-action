@@ -216,9 +216,13 @@ func handleUpload(config config.Config, backend Backend, file types.FileInfo) ([
 	result = append(result, file)
 
 	if shouldDuplicateHTMLWithNoExtension(config, file) {
-		// Duplicate the file with no extension
+		body, err := os.Open(file.SourcePath)
+		if err != nil {
+			return nil, fmt.Errorf("Error opening file %s: %v", file.SourcePath, err)
+		}
+
 		objectKey := strings.TrimSuffix(objectKey, ".html")
-		objectKey = objectKey + "index.html"
+		objectKey = objectKey + "/index.html"
 		err = backend.PutObject(types.PutObjectRequest{
 			ACL:          file.ACL,
 			Body:         body,
