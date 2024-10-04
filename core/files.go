@@ -44,7 +44,7 @@ func walkDir(dir, root string, sw *sync.WaitGroup, config config.FileConfig, fil
 
 			md5, err := utils.HashMD5(path)
 			if err != nil {
-				githubactions.Debugf("Error hashing file: %v", err)
+				githubactions.Debugf("Failed to compute MD5 hash for file: %v", err)
 			}
 
 			file := types.FileInfo{
@@ -69,7 +69,7 @@ func dirents(dir string) []fs.DirEntry {
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		githubactions.Errorf("Error reading directory: %v", err)
+		githubactions.Errorf("Unable to read directory: %v", err)
 		return nil
 	}
 	return entries
@@ -78,7 +78,7 @@ func dirents(dir string) []fs.DirEntry {
 func isExcluded(path string, config config.FileConfig) bool {
 	for _, pattern := range config.ExcludePatterns {
 		if wildcard.Match(pattern, path) {
-			githubactions.Infof("%s is excluded by pattern %s", path, pattern)
+			githubactions.Infof("Excluding %s based on pattern %s", path, pattern)
 			return true
 		}
 	}

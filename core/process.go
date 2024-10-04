@@ -31,67 +31,67 @@ func Process(config config.Config) error {
 		return err
 	}
 
-	githubactions.Infof("Setup incremental upload")
-	githubactions.Group("Get .fileinfo from backend storage")
+	githubactions.Infof("Initiating incremental upload")
+	githubactions.Group("Fetching .fileinfo from backend storage")
 	ibytes, err := backend.GetObject(IncrementalConfig)
 	if err != nil {
-		githubactions.Warningf("Could not get .fileinfo: %v", err)
-		githubactions.Warningf("Uploading all files")
+		githubactions.Warningf("Unable to retrieve .fileinfo: %v", err)
+		githubactions.Warningf("Proceeding to upload all files")
 	}
 
 	incremental := types.NewIncrementalConfig()
 	err = incremental.UnmarshalJSON(ibytes)
 	if err != nil {
-		githubactions.Warningf("Error unmarshalling .fileinfo: %v", err)
+		githubactions.Warningf("Failed to unmarshal .fileinfo: %v", err)
 	}
 	githubactions.EndGroup()
 
 	// Cleanup bucket for first run
 	if incremental.Size() == 0 {
-		githubactions.Group("Cleanup bucket for first run")
-		githubactions.Infof("Starting cleanup")
+		githubactions.Group("Cleaning up bucket for first run")
+		githubactions.Infof("Starting cleanup process")
 		if err := backend.EmptyBucket(); err != nil {
-			githubactions.Warningf("Error cleaning up bucket: %v", err)
+			githubactions.Warningf("Error during bucket cleanup: %v", err)
 		}
-		githubactions.Infof("Finished cleanup")
+		githubactions.Infof("Cleanup process completed")
 	}
 	githubactions.EndGroup()
 
-	githubactions.Group("Upload files")
-	githubactions.Infof("Starting uploading files")
+	githubactions.Group("Uploading files")
+	githubactions.Infof("Commencing file upload")
 	files := WalkDir(config)
 	uploaded, _ := upload(config, backend, files, incremental)
-	githubactions.Infof("Finished uploading files")
+	githubactions.Infof("File upload completed")
 	githubactions.EndGroup()
 
 	if incremental.Size() > 0 {
-		githubactions.Group("Delete leftover files")
-		githubactions.Infof("Starting deleting leftover files")
+		githubactions.Group("Removing leftover files")
+		githubactions.Infof("Commencing removal of leftover files")
 		errs := delete(backend, incremental)
 		if len(errs) > 0 {
-			githubactions.Warningf("Error deleting leftover files: %v", errs)
+			githubactions.Warningf("Error while removing leftover files: %v", errs)
 		}
-		githubactions.Infof("Finished deleting leftover files")
+		githubactions.Infof("Removal of leftover files completed")
 		githubactions.EndGroup()
 	}
 
-	githubactions.Group("Save incremental config")
-	githubactions.Infof("Generating incremental config")
+	githubactions.Group("Saving incremental configuration")
+	githubactions.Infof("Generating incremental configuration")
 	newIncremental := types.IncrementalConfigFromFileInfos(uploaded)
 	nbytes, err := newIncremental.MarshalJSON()
 	if err != nil {
-		githubactions.Warningf("Error marshalling .fileinfo: %v", err)
+		githubactions.Warningf("Error during .fileinfo marshalling: %v", err)
 	}
-	githubactions.Infof("Saving incremental config")
+	githubactions.Infof("Saving incremental configuration")
 	err = backend.PutObject(types.PutObjectRequest{
 		ACL:  types.PrivateACL,
 		Body: bytes.NewReader(nbytes),
 		Key:  IncrementalConfig,
 	})
 	if err != nil {
-		githubactions.Warningf("Error saving .fileinfo: %v", err)
+		githubactions.Warningf("Error while saving .fileinfo: %v", err)
 	}
-	githubactions.Infof("Finished saving incremental config")
+	githubactions.Infof("Incremental configuration saving completed")
 	githubactions.EndGroup()
 
 	return nil
@@ -121,7 +121,8 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 				uploaded = append(uploaded, file)
 				uplMutex.Unlock()
 				totalSkipped.Add(1)
-				githubactions.Infof("Skipping %s because the content is the same", objectKey)
+				githubactions.Infof("Skipping upload of %s as the content is unchanged", objectKey)
+				return
 			}
 
 			sema <- struct{}{}
@@ -132,7 +133,7 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 				errs = append(errs, err)
 				errMutex.Unlock()
 				totalError.Add(1)
-				githubactions.Errorf("Error uploading %s: %v", objectKey, err)
+				githubactions.Errorf("Error while uploading %s: %v", objectKey, err)
 				return
 			}
 
@@ -140,7 +141,7 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 			uploaded = append(uploaded, upl...)
 			uplMutex.Unlock()
 			totalUploadedFiles.Add(1)
-			githubactions.Infof("Uploaded %s", objectKey)
+			githubactions.Infof("Successfully uploaded %s", objectKey)
 		}(file)
 	}
 	sw.Wait()
@@ -216,10 +217,6 @@ func handleUpload(config config.Config, backend Backend, file types.FileInfo) ([
 	result = append(result, file)
 
 	if shouldDuplicateHTMLWithNoExtension(config, file) {
-		// body, err := os.Open(file.SourcePath)
-		// if err != nil {
-		// 	return nil, fmt.Errorf("Error opening file %s: %v", file.SourcePath, err)
-		// }
 		objectKey := strings.TrimSuffix(objectKey, ".html")
 		objectKey = objectKey + "/index.html"
 		err = backend.PutObject(types.PutObjectRequest{
