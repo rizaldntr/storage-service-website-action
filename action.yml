@@ -12,13 +12,15 @@ inputs:
     description: "Bucket name"
     required: true
   aws-access-key-id:
-    description: "AWS Access Key ID"
+    description: "AWS access key ID"
     required: true
   aws-secret-access-key:
-    description: "AWS Secret Access Key"
+    description: "AWS secret access key"
     required: true
+  aws-session-token:
+    description: "AWS session token"
   aws-region:
-    description: "AWS Region"
+    description: "AWS region"
     required: true
   object-rules:
     description: "Yaml configuration for setting cache-control and content-type based on pattern"
@@ -57,6 +59,7 @@ runs:
   env:
     AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
     AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+    AWS_SESSION_TOKEN: ${{ inputs.aws-session-token }}
     AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
     BUCKET: ${{ inputs.bucket }}
     FOLDER: ${{ inputs.folder }}
