@@ -72,11 +72,21 @@ func (s *S3) ListObjects(token *string) ([]string, error) {
 
 func (s *S3) PutObject(request types.PutObjectRequest) error {
 	_, err := s.client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:       aws.String(s.bucket),
-		Key:          aws.String(request.Key),
-		Body:         request.Body,
-		CacheControl: aws.String(request.CacheControl),
-		ContentType:  aws.String(request.ContentType),
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(request.Key),
+		Body:   request.Body,
+		CacheControl: func() *string {
+			if request.CacheControl != "" {
+				return aws.String(request.CacheControl)
+			}
+			return nil
+		}(),
+		ContentType: func() *string {
+			if request.ContentType != "" {
+				return aws.String(request.ContentType)
+			}
+			return nil
+		}(),
 		ACL: func() awstypes.ObjectCannedACL {
 			if request.ACL == types.PublicACL {
 				return awstypes.ObjectCannedACLPublicRead

@@ -145,15 +145,15 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 	}
 	sw.Wait()
 
-	// githubactions.AddStepSummary(fmt.Sprintf(`
-	// ### Upload Summary
-	// | Status       | Count            |
-	// | :----------- | :--------------: |
-	// | Skipped      | %d               |
-	// | Uploaded     | %d               |
-	// | Errors       | %d               |
-	// | Total Files  | %d               |
-	// `, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
+	githubactions.AddStepSummary(fmt.Sprintf(`
+	### Upload Summary
+	| Status       | Count            |
+	| :----------- | :--------------: |
+	| Skipped      | %d               |
+	| Uploaded     | %d               |
+	| Errors       | %d               |
+	| Total Files  | %d               |
+	`, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
 
 	return uploaded, errs
 }
@@ -216,11 +216,10 @@ func handleUpload(config config.Config, backend Backend, file types.FileInfo) ([
 	result = append(result, file)
 
 	if shouldDuplicateHTMLWithNoExtension(config, file) {
-		body, err := os.Open(file.SourcePath)
-		if err != nil {
-			return nil, fmt.Errorf("Error opening file %s: %v", file.SourcePath, err)
-		}
-
+		// body, err := os.Open(file.SourcePath)
+		// if err != nil {
+		// 	return nil, fmt.Errorf("Error opening file %s: %v", file.SourcePath, err)
+		// }
 		objectKey := strings.TrimSuffix(objectKey, ".html")
 		objectKey = objectKey + "/index.html"
 		err = backend.PutObject(types.PutObjectRequest{
