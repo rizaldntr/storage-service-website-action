@@ -2,13 +2,13 @@ package core
 
 import (
 	"io/fs"
+	"mime"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/IGLOU-EU/go-wildcard/v2"
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/rizaldntr/storage-service-website-action/config"
 	"github.com/rizaldntr/storage-service-website-action/types"
 	"github.com/rizaldntr/storage-service-website-action/utils"
@@ -121,10 +121,7 @@ func setCacheControlAndFileType(config config.FileConfig, file *types.FileInfo) 
 		file.CacheControl = config.DefaultImageCacheControl
 		file.FileType = types.Image
 	default:
-		mimeType, err := mimetype.DetectFile(path)
-		if err == nil {
-			file.ContentType = mimeType.String()
-		}
+		file.ContentType = mime.TypeByExtension(filepath.Ext(path))
 		file.CacheControl = config.DefaultCacheControl
 		file.FileType = types.Other
 	}

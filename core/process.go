@@ -146,15 +146,15 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 	}
 	sw.Wait()
 
-	githubactions.AddStepSummary(fmt.Sprintf(`
-	### Upload Summary
-	| Status       | Count            |
-	| :----------- | :--------------: |
-	| Skipped      | %d               |
-	| Uploaded     | %d               |
-	| Errors       | %d               |
-	| Total Files  | %d               |
-	`, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
+	// githubactions.AddStepSummary(fmt.Sprintf(`
+	// ### Upload Summary
+	// | Status       | Count            |
+	// | :----------- | :--------------: |
+	// | Skipped      | %d               |
+	// | Uploaded     | %d               |
+	// | Errors       | %d               |
+	// | Total Files  | %d               |
+	// `, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
 
 	return uploaded, errs
 }
