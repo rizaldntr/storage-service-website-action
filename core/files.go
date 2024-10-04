@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"io/fs"
 	"mime"
 	"os"
@@ -122,6 +123,7 @@ func setCacheControlAndFileType(config config.FileConfig, file *types.FileInfo) 
 		file.FileType = types.Image
 	default:
 		file.ContentType = mime.TypeByExtension(filepath.Ext(path))
+		fmt.Println(file.ContentType)
 		file.CacheControl = config.DefaultCacheControl
 		file.FileType = types.Other
 	}
