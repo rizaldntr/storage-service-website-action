@@ -8,6 +8,7 @@ import (
 type IncrementalConfigValue struct {
 	ContentMD5   string
 	CacheControl string
+	ContentType  string
 }
 
 type IncrementalConfig struct {
@@ -27,6 +28,7 @@ func IncrementalConfigFromFileInfos(files []FileInfo) *IncrementalConfig {
 		i.M[file.TargetPath] = IncrementalConfigValue{
 			ContentMD5:   file.ContentMD5,
 			CacheControl: file.CacheControl,
+			ContentType:  file.ContentType,
 		}
 	}
 	return i
@@ -47,6 +49,7 @@ func (i *IncrementalConfig) Set(file FileInfo) {
 	i.M[file.TargetPath] = IncrementalConfigValue{
 		ContentMD5:   file.ContentMD5,
 		CacheControl: file.CacheControl,
+		ContentType:  file.ContentType,
 	}
 }
 

@@ -267,7 +267,8 @@ func shouldSkip(item types.FileInfo, i *types.IncrementalConfig) bool {
 	// later we will delete leftover items from the incremental config
 	i.Delete(item)
 
-	if item.ContentMD5 != "" && item.ContentMD5 == remoteConfig.ContentMD5 && item.CacheControl == remoteConfig.CacheControl {
+	if item.ContentMD5 != "" && item.ContentMD5 == remoteConfig.ContentMD5 &&
+		item.CacheControl == remoteConfig.CacheControl && item.ContentType == remoteConfig.ContentType {
 		return true
 	}
 
