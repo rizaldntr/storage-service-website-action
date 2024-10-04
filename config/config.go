@@ -24,21 +24,21 @@ type ObjectRule struct {
 }
 
 type FileConfig struct {
-	DefaultACL               types.ObjectACL
-	DefaultCacheControl      string
-	DefaultHTMLCacheControl  string
-	DefaultImageCacheControl string
-	DefaultPDFCacheControl   string
-	ExcludePatterns          []string
-	ObjectRules              []ObjectRule
+	DefaultACL                   types.ObjectACL
+	DefaultCacheControl          string
+	DefaultHTMLCacheControl      string
+	DefaultImageCacheControl     string
+	DefaultPDFCacheControl       string
+	ExcludePatterns              []string
+	ObjectRules                  []ObjectRule
+	RemoveHTMLExtension          bool
+	DuplicateHTMLWithNoExtension bool
 }
 
 type Config struct {
-	Folder                       string
-	FileConfig                   FileConfig
-	Bucket                       string
-	RemoveHTMLExtension          bool
-	DuplicateHTMLWithNoExtension bool
+	Folder     string
+	FileConfig FileConfig
+	Bucket     string
 }
 
 func getACL() types.ObjectACL {
@@ -60,17 +60,17 @@ func Get() Config {
 		config = Config{
 			Folder: path.Clean(os.Getenv("FOLDER")) + "/",
 			FileConfig: FileConfig{
-				DefaultACL:               getACL(),
-				DefaultCacheControl:      utils.GetEnvOrDefault("DEFAULT_CACHE_CONTROL", "max-age=2592000"),
-				DefaultHTMLCacheControl:  utils.GetEnvOrDefault("HTML_CACHE_CONTROL", "max-age=600"),
-				DefaultImageCacheControl: utils.GetEnvOrDefault("IMAGE_CACHE_CONTROL", "max-age=864000"),
-				DefaultPDFCacheControl:   utils.GetEnvOrDefault("PDF_CACHE_CONTROL", "max-age=2592000"),
-				ExcludePatterns:          utils.GetActionInputAsSlice("EXCLUDE"),
-				ObjectRules:              rules,
+				DefaultACL:                   getACL(),
+				DefaultCacheControl:          utils.GetEnvOrDefault("DEFAULT_CACHE_CONTROL", "max-age=2592000"),
+				DefaultHTMLCacheControl:      utils.GetEnvOrDefault("HTML_CACHE_CONTROL", "max-age=600"),
+				DefaultImageCacheControl:     utils.GetEnvOrDefault("IMAGE_CACHE_CONTROL", "max-age=864000"),
+				DefaultPDFCacheControl:       utils.GetEnvOrDefault("PDF_CACHE_CONTROL", "max-age=2592000"),
+				ExcludePatterns:              utils.GetActionInputAsSlice("EXCLUDE"),
+				ObjectRules:                  rules,
+				RemoveHTMLExtension:          utils.GetEnvOrDefault("REMOVE_HTML_EXTENSION", "false") == "true",
+				DuplicateHTMLWithNoExtension: utils.GetEnvOrDefault("DUPLICATE_HTML_WITH_NO_EXTENSION", "false") == "true",
 			},
-			Bucket:                       os.Getenv("BUCKET"),
-			RemoveHTMLExtension:          utils.GetEnvOrDefault("REMOVE_HTML_EXTENSION", "false") == "true",
-			DuplicateHTMLWithNoExtension: utils.GetEnvOrDefault("DUPLICATE_HTML_WITH_NO_EXTENSION", "false") == "true",
+			Bucket: os.Getenv("BUCKET"),
 		}
 	})
 	return config

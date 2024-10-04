@@ -1,9 +1,7 @@
 package core
 
 import (
-	"fmt"
 	"io/fs"
-	"mime"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,6 +47,7 @@ func walkDir(dir, root string, sw *sync.WaitGroup, config config.FileConfig, fil
 				githubactions.Debugf("Failed to compute MD5 hash for file: %v", err)
 			}
 
+			targetPath := strings.TrimPrefix(path, root)
 			file := types.FileInfo{
 				ACL:          config.DefaultACL,
 				CacheControl: config.DefaultCacheControl,
@@ -56,10 +55,20 @@ func walkDir(dir, root string, sw *sync.WaitGroup, config config.FileConfig, fil
 				Dir:          root,
 				Name:         entry.Name(),
 				SourcePath:   path,
-				TargetPath:   strings.TrimPrefix(path, root),
+				TargetPath:   targetPath,
 			}
 			setCacheControlAndFileType(config, &file)
 			processRegexConfig(&file, config.ObjectRules)
+
+			if file.FileType == types.HTML && config.RemoveHTMLExtension {
+				file.TargetPath = strings.TrimSuffix(targetPath, ".html")
+			} else if file.FileType == types.HTML && config.DuplicateHTMLWithNoExtension && targetPath != "index.html" {
+				targetPath = strings.TrimSuffix(targetPath, ".html")
+				targetPath = targetPath + "/index.html"
+				duplicated := file
+				duplicated.TargetPath = targetPath
+				files <- duplicated
+			}
 			files <- file
 		}
 	}
@@ -122,8 +131,7 @@ func setCacheControlAndFileType(config config.FileConfig, file *types.FileInfo) 
 		file.CacheControl = config.DefaultImageCacheControl
 		file.FileType = types.Image
 	default:
-		file.ContentType = mime.TypeByExtension(filepath.Ext(path))
-		fmt.Println(file.ContentType)
+		file.ContentType = utils.AutoDetectContentType(path)
 		file.CacheControl = config.DefaultCacheControl
 		file.FileType = types.Other
 	}

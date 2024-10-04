@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -146,15 +144,15 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 	}
 	sw.Wait()
 
-	// githubactions.AddStepSummary(fmt.Sprintf(`
-	// ### Upload Summary
-	// | Status       | Count            |
-	// | :----------- | :--------------: |
-	// | Skipped      | %d               |
-	// | Uploaded     | %d               |
-	// | Errors       | %d               |
-	// | Total Files  | %d               |
-	// `, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
+	githubactions.AddStepSummary(fmt.Sprintf(`
+	### Upload Summary
+	| Status       | Count            |
+	| :----------- | :--------------: |
+	| Skipped      | %d               |
+	| Uploaded     | %d               |
+	| Errors       | %d               |
+	| Total Files  | %d               |
+	`, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
 
 	return uploaded, errs
 }
@@ -163,10 +161,12 @@ func delete(backend Backend, i *types.IncrementalConfig) []error {
 	count := 0
 	maxKeys := 1000
 	keys := make([]string, 0, maxKeys)
+	deletedKeys := make([]string, 0, 20)
 
 	var errs []error
 	var sw sync.WaitGroup
-	var mutex sync.Mutex
+	var errMutex sync.Mutex
+	var delMutex sync.Mutex
 
 	sema := make(chan struct{}, 10)
 	for k := range i.M {
@@ -180,15 +180,23 @@ func delete(backend Backend, i *types.IncrementalConfig) []error {
 				err := backend.DeleteObjects(keys)
 				<-sema
 				if err != nil {
-					mutex.Lock()
+					errMutex.Lock()
 					errs = append(errs, err)
-					mutex.Unlock()
+					errMutex.Unlock()
+					githubactions.Errorf("Error while deleting objects: %v", err)
+				} else {
+					delMutex.Lock()
+					deletedKeys = append(deletedKeys, keys...)
+					delMutex.Unlock()
 				}
 			}(keys)
 			keys = make([]string, 0, maxKeys)
 		}
 	}
 	sw.Wait()
+	for _, key := range deletedKeys {
+		githubactions.Infof("Successfully deleted %s", key)
+	}
 	return errs
 }
 
@@ -199,10 +207,6 @@ func handleUpload(config config.Config, backend Backend, file types.FileInfo) ([
 	}
 
 	objectKey := file.TargetPath
-	if config.RemoveHTMLExtension && file.FileType == types.HTML {
-		objectKey = strings.TrimSuffix(objectKey, ".html")
-	}
-
 	result := make([]types.FileInfo, 0, 2)
 	err = backend.PutObject(types.PutObjectRequest{
 		ACL:          file.ACL,
@@ -215,46 +219,7 @@ func handleUpload(config config.Config, backend Backend, file types.FileInfo) ([
 		return nil, fmt.Errorf("Error uploading file %s: %v", objectKey, err)
 	}
 	result = append(result, file)
-
-	if shouldDuplicateHTMLWithNoExtension(config, file) {
-		objectKey := strings.TrimSuffix(objectKey, ".html")
-		objectKey = objectKey + "/index.html"
-		err = backend.PutObject(types.PutObjectRequest{
-			ACL:          file.ACL,
-			Body:         body,
-			CacheControl: file.CacheControl,
-			ContentType:  file.ContentType,
-			Key:          objectKey,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("Error uploading file %s: %v", objectKey, err)
-		}
-		file.TargetPath = objectKey
-		result = append(result, file)
-	}
-
 	return result, nil
-}
-
-func shouldDuplicateHTMLWithNoExtension(config config.Config, file types.FileInfo) bool {
-	if !config.DuplicateHTMLWithNoExtension {
-		return false
-	}
-
-	if file.FileType != types.HTML {
-		return false
-	}
-
-	if config.RemoveHTMLExtension {
-		return false
-	}
-
-	filename := filepath.Base(file.TargetPath)
-	if filename == "index.html" {
-		return false
-	}
-
-	return true
 }
 
 func shouldSkip(item types.FileInfo, i *types.IncrementalConfig) bool {
