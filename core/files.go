@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/IGLOU-EU/go-wildcard/v2"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/rizaldntr/storage-service-website-action/config"
 	"github.com/rizaldntr/storage-service-website-action/types"
 	"github.com/rizaldntr/storage-service-website-action/utils"
@@ -109,15 +110,22 @@ func setCacheControlAndFileType(config config.FileConfig, file *types.FileInfo) 
 	switch {
 	case utils.IsHTML(path):
 		file.CacheControl = config.DefaultHTMLCacheControl
+		file.ContentType = "text/html"
 		file.FileType = types.HTML
 	case utils.IsPDF(path):
 		file.CacheControl = config.DefaultPDFCacheControl
+		file.ContentType = "application/pdf"
 		file.FileType = types.PDF
 	case utils.IsImage(path):
+		file.ContentType = "image/" + strings.TrimPrefix(filepath.Ext(path), ".")
 		file.CacheControl = config.DefaultImageCacheControl
 		file.FileType = types.Image
 	default:
-		file.FileType = types.Other
+		mimeType, err := mimetype.DetectFile(path)
+		if err == nil {
+			file.ContentType = mimeType.String()
+		}
 		file.CacheControl = config.DefaultCacheControl
+		file.FileType = types.Other
 	}
 }
