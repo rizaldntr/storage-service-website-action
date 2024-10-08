@@ -58,7 +58,7 @@ func Process(config config.Config) error {
 	githubactions.Group("Uploading files")
 	githubactions.Infof("Commencing file upload")
 	files := WalkDir(config)
-	uploaded, _ := upload(config, backend, files, incremental)
+	uploaded, _ := upload(backend, files, incremental)
 	githubactions.Infof("File upload completed")
 	githubactions.EndGroup()
 
@@ -95,7 +95,7 @@ func Process(config config.Config) error {
 	return nil
 }
 
-func upload(config config.Config, backend Backend, files <-chan types.FileInfo, i *types.IncrementalConfig) ([]types.FileInfo, []error) {
+func upload(backend Backend, files <-chan types.FileInfo, i *types.IncrementalConfig) ([]types.FileInfo, []error) {
 	var sw sync.WaitGroup
 	var sema = make(chan struct{}, 30)
 	var errMutex sync.Mutex
@@ -124,7 +124,7 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 			}
 
 			sema <- struct{}{}
-			upl, err := handleUpload(config, backend, file)
+			upl, err := handleUpload(backend, file)
 			<-sema
 			if err != nil {
 				errMutex.Lock()
@@ -143,16 +143,20 @@ func upload(config config.Config, backend Backend, files <-chan types.FileInfo, 
 		}(file)
 	}
 	sw.Wait()
+	fmt.Println("Total Files: ", totalFile.Load())
+	fmt.Println("Total Skipped: ", totalSkipped.Load())
+	fmt.Println("Total Uploaded Files: ", totalUploadedFiles.Load())
+	fmt.Println("Total Error: ", totalError.Load())
 
-	githubactions.AddStepSummary(fmt.Sprintf(`
-	### Upload Summary
-	| Status       | Count            |
-	| :----------- | :--------------: |
-	| Skipped      | %d               |
-	| Uploaded     | %d               |
-	| Errors       | %d               |
-	| Total Files  | %d               |
-	`, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
+	// githubactions.AddStepSummary(fmt.Sprintf(`
+	// ### Upload Summary
+	// | Status       | Count            |
+	// | :----------- | :--------------: |
+	// | Skipped      | %d               |
+	// | Uploaded     | %d               |
+	// | Errors       | %d               |
+	// | Total Files  | %d               |
+	// `, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
 
 	return uploaded, errs
 }
@@ -200,7 +204,7 @@ func delete(backend Backend, i *types.IncrementalConfig) []error {
 	return errs
 }
 
-func handleUpload(config config.Config, backend Backend, file types.FileInfo) ([]types.FileInfo, error) {
+func handleUpload(backend Backend, file types.FileInfo) ([]types.FileInfo, error) {
 	body, err := os.Open(file.SourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("Error opening file %s: %v", file.SourcePath, err)
