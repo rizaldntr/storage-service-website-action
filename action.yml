@@ -1,0 +1,93 @@
+name: "storage-service-website-action"
+description: "Automate the deployment of static websites to AWS Storage Service (S3) with customizable caching, file handling, and AWS credentials integration."
+author: "Rizal Diantoro <rizaldntr@gmail.com>"
+branding:
+  icon: "upload"
+  color: "gray-dark"
+
+inputs:
+  # AWS Credentials
+  aws-access-key-id:
+    description: "Your AWS Access Key ID, used for authenticating the action to access the S3 bucket."
+    required: true
+  aws-secret-access-key:
+    description: "Your AWS Secret Access Key, which works together with the Access Key ID for authentication."
+    required: true
+  aws-session-token:
+    description: "An optional session token for AWS temporary credentials, if you're using a session-based approach (e.g., STS)."
+    required: false
+  aws-region:
+    description: "The AWS region where your S3 bucket is located (e.g., us-east-1, eu-west-2)."
+    required: true
+
+  # S3 Configuration
+  bucket:
+    description: "The target AWS S3 bucket name where the website will be deployed."
+    required: true
+  folder:
+    description: "The local folder path that contains the static website files to be uploaded."
+    required: true
+  exclude:
+    description: "Optional patterns or specific file names to exclude from the deployment (e.g., logs or test files)."
+    required: false
+
+  # Cache-Control and Object Rules
+  object-rules:
+    description: |
+      Optional YAML configuration that defines cache-control and content-type rules for specific file patterns.
+      Example configuration:
+      ```
+      - pattern: '_next/*'
+        cache-control: 'max-age=31536000, immutable'
+      - pattern: 'assets/*'
+        cache-control: 'max-age=86400'
+      - pattern: 'images/*'
+        cache-control: 'max-age=86400'
+      ```
+      This allows you to define different cache behaviors for specific file types or directories.
+    required: false
+  default-cache-control:
+    description: "The default `Cache-Control` header to apply to all files unless otherwise specified. This controls how long the file is cached by browsers. Default is 'max-age=2592000' (30 days)."
+    required: false
+    default: max-age=2592000
+  html-cache-control:
+    description: "The `Cache-Control` value specifically for HTML files, used to define how often these should be refreshed. Default is 'max-age=600' (10 minutes)."
+    required: false
+    default: max-age=600
+  image-cache-control:
+    description: "The `Cache-Control` value specifically for image files (e.g., PNG, JPG), allowing you to set longer caching periods. Default is 'max-age=864000' (10 days)."
+    required: false
+    default: max-age=864000
+  pdf-cache-control:
+    description: "The `Cache-Control` value for PDF files. Default is 'max-age=2592000' (30 days)."
+    required: false
+    default: max-age=2592000
+
+  # URL Handling
+  remove-html-extension:
+    description: "Set to 'true' if you want to remove the '.html' extension from URLs when serving the website (e.g., `/about` instead of `/about.html`)."
+    required: false
+    default: "false"
+  duplicate-html-with-no-extension:
+    description: "Set to 'true' to generate both `.html` files and copies without the `.html` extension, allowing both URL formats to work. Default is 'false'."
+    required: false
+    default: "false"
+
+runs:
+  using: "docker"
+  image: "docker://ghcr.io/rizaldntr/storage-service-website-action:v1.0.0"
+  env:
+    AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+    AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+    AWS_SESSION_TOKEN: ${{ inputs.aws-session-token }}
+    AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+    BUCKET: ${{ inputs.bucket }}
+    FOLDER: ${{ inputs.folder }}
+    OBJECT_RULES: ${{ inputs.object-rules }}
+    EXCLUDE: ${{ inputs.exclude }}
+    DEFAULT_CACHE_CONTROL: ${{ inputs.default-cache-control }}
+    HTML_CACHE_CONTROL: ${{ inputs.html-cache-control }}
+    IMAGE_CACHE_CONTROL: ${{ inputs.image-cache-control }}
+    PDF_CACHE_CONTROL: ${{ inputs.pdf-cache-control }}
+    REMOVE_HTML_EXTENSION: ${{ inputs.remove-html-extension }}
+    DUPLICATE_HTML_WITH_NO_EXTENSION: ${{ inputs.duplicate-html-with-no-extension }}
