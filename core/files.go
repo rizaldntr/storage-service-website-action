@@ -99,7 +99,7 @@ func isExcluded(path string, config config.FileConfig) bool {
 func processRegexConfig(file *types.FileInfo, regexConfigs []config.ObjectRule) {
 	var regexConfig *config.ObjectRule
 	for _, config := range regexConfigs {
-		if wildcard.Match(config.Pattern, file.SourcePath) {
+		if wildcard.Match(config.Pattern, strings.TrimPrefix(file.SourcePath, file.Dir)) {
 			regexConfig = &config
 			break
 		}
