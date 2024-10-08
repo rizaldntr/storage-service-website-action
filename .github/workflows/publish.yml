@@ -1,10 +1,7 @@
 name: Publish to Github Container Registry
 on:
-  push:
-    branches:
-      - first-init
-#   release:
-#     types: [published]
+  release:
+    types: [published]
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -19,5 +16,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
-          tags: "latest"
+          tags: ${{ github.ref_name }}
           platforms: linux/amd64,linux/arm64

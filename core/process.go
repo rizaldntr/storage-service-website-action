@@ -143,20 +143,11 @@ func upload(backend Backend, files <-chan types.FileInfo, i *types.IncrementalCo
 		}(file)
 	}
 	sw.Wait()
-	fmt.Println("Total Files: ", totalFile.Load())
-	fmt.Println("Total Skipped: ", totalSkipped.Load())
-	fmt.Println("Total Uploaded Files: ", totalUploadedFiles.Load())
-	fmt.Println("Total Error: ", totalError.Load())
 
-	// githubactions.AddStepSummary(fmt.Sprintf(`
-	// ### Upload Summary
-	// | Status       | Count            |
-	// | :----------- | :--------------: |
-	// | Skipped      | %d               |
-	// | Uploaded     | %d               |
-	// | Errors       | %d               |
-	// | Total Files  | %d               |
-	// `, totalFile.Load(), totalSkipped.Load(), totalUploadedFiles.Load(), totalError.Load()))
+	githubactions.Infof("Total Files: ", totalFile.Load())
+	githubactions.Infof("Total Skipped Files: ", totalSkipped.Load())
+	githubactions.Infof("Total Uploaded Files: ", totalUploadedFiles.Load())
+	githubactions.Infof("Total Errors: ", totalError.Load())
 
 	return uploaded, errs
 }
