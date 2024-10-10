@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+func init() {
+	mime.AddExtensionType(".svg", "image/svg+xml")
+}
+
 func AutoDetectContentType(path string) string {
 	path = strings.TrimSuffix(path, ".map")
 	ext := filepath.Ext(path)
