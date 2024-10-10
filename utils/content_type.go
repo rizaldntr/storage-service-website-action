@@ -7,11 +7,11 @@ import (
 )
 
 func init() {
+	mime.AddExtensionType(".map", "application/json")
 	mime.AddExtensionType(".svg", "image/svg+xml")
 }
 
 func AutoDetectContentType(path string) string {
-	path = strings.TrimSuffix(path, ".map")
 	ext := filepath.Ext(path)
 	if ext == "" {
 		return "application/octet-stream"

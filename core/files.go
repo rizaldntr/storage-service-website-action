@@ -127,7 +127,7 @@ func setCacheControlAndFileType(config config.FileConfig, file *types.FileInfo) 
 		file.ContentType = "application/pdf"
 		file.FileType = types.PDF
 	case utils.IsImage(path):
-		file.ContentType = "image/" + strings.TrimPrefix(filepath.Ext(path), ".")
+		file.ContentType = utils.AutoDetectContentType(path)
 		file.CacheControl = config.DefaultImageCacheControl
 		file.FileType = types.Image
 	default:
