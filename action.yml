@@ -75,7 +75,7 @@ inputs:
 
 runs:
   using: "docker"
-  image: "docker://ghcr.io/rizaldntr/storage-service-website-action:v1.0.0"
+  image: "docker://ghcr.io/rizaldntr/storage-service-website-action:fix-remove-html-ext"
   env:
     AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
     AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
