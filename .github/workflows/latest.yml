@@ -1,7 +1,8 @@
-name: Publish to Github Container Registry
+name: Publish latest tag to Github Container Registry
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -16,5 +17,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
-          tags: ${{ github.ref_name }}
+          tags: latest
           platforms: linux/amd64,linux/arm64
