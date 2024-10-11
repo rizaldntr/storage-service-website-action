@@ -64,7 +64,6 @@ func walkDir(dir, root string, sw *sync.WaitGroup, config config.FileConfig, fil
 				file.TargetPath = strings.TrimSuffix(targetPath, ".html")
 			} else if file.FileType == types.HTML && config.DuplicateHTMLWithNoExtension && targetPath != "index.html" {
 				targetPath = strings.TrimSuffix(targetPath, ".html")
-				targetPath = targetPath + "/index.html"
 				duplicated := file
 				duplicated.TargetPath = targetPath
 				files <- duplicated
