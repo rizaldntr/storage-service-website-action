@@ -144,10 +144,10 @@ func upload(backend Backend, files <-chan types.FileInfo, i *types.IncrementalCo
 	}
 	sw.Wait()
 
-	githubactions.Infof("Total Files: ", totalFile.Load())
-	githubactions.Infof("Total Skipped Files: ", totalSkipped.Load())
-	githubactions.Infof("Total Uploaded Files: ", totalUploadedFiles.Load())
-	githubactions.Infof("Total Errors: ", totalError.Load())
+	githubactions.Infof("Total Files: %d", totalFile.Load())
+	githubactions.Infof("Total Skipped Files: %d", totalSkipped.Load())
+	githubactions.Infof("Total Uploaded Files: %d", totalUploadedFiles.Load())
+	githubactions.Infof("Total Errors: %d", totalError.Load())
 
 	return uploaded, errs
 }

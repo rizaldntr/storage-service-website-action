@@ -60,11 +60,10 @@ func walkDir(dir, root string, sw *sync.WaitGroup, config config.FileConfig, fil
 			setCacheControlAndFileType(config, &file)
 			processRegexConfig(&file, config.ObjectRules)
 
-			if file.FileType == types.HTML && config.RemoveHTMLExtension {
+			if file.FileType == types.HTML && config.RemoveHTMLExtension && targetPath != "index.html" {
 				file.TargetPath = strings.TrimSuffix(targetPath, ".html")
 			} else if file.FileType == types.HTML && config.DuplicateHTMLWithNoExtension && targetPath != "index.html" {
 				targetPath = strings.TrimSuffix(targetPath, ".html")
-				targetPath = targetPath + "/index.html"
 				duplicated := file
 				duplicated.TargetPath = targetPath
 				files <- duplicated
